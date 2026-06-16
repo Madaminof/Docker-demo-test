@@ -1,0 +1,42 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install dependencies
+        run: cd backend && npm install
+      - name: Run tests
+        run: cd backend && npm test # package.json da "test" scripti bo'lishi kerak
+
+  build-and-push:
+    needs: test # Test o'tmasa, buni boshlama
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Login to DockerHub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build and Push
+        uses: docker/build-push-action@v4
+        with:
+          context: ./backend
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/my_app-backend:latest
+
+  notify:
+    needs: [test, build-and-push]
+    if: failure() # Faqat xato bo'lganda ishlaydi
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Slack/Telegram Notification
+        run: |
+          echo "Pipeline failed! Alerting the team..."
+          # Bu yerda Telegram API orqali xabar yuborish kodi bo'ladi
