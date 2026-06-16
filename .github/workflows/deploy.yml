@@ -8,9 +8,17 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
       - name: Install dependencies
-        run: npm install  # Backend papkasi yo'q, shuning uchun to'g'ridan-to'g'ri install
+        run: npm install
+
       - name: Run tests
         run: npm test
 
@@ -18,15 +26,18 @@ jobs:
     needs: test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Login to DockerHub
-        uses: docker/login-action@v2
+        uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - name: Build and Push
-        uses: docker/build-push-action@v4
+
+      - name: Build and Push Docker Image
+        uses: docker/build-push-action@v5
         with:
-          context: . # Hozirgi papkani build qilamiz
+          context: .
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/my_app-backend:latest
