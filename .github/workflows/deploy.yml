@@ -10,12 +10,12 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Install dependencies
-        run: cd backend && npm install
+        run: npm install  # Backend papkasi yo'q, shuning uchun to'g'ridan-to'g'ri install
       - name: Run tests
-        run: cd backend && npm test # package.json da "test" scripti bo'lishi kerak
+        run: npm test
 
   build-and-push:
-    needs: test # Test o'tmasa, buni boshlama
+    needs: test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -27,16 +27,6 @@ jobs:
       - name: Build and Push
         uses: docker/build-push-action@v4
         with:
-          context: ./backend
+          context: . # Hozirgi papkani build qilamiz
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/my_app-backend:latest
-
-  notify:
-    needs: [test, build-and-push]
-    if: failure() # Faqat xato bo'lganda ishlaydi
-    runs-on: ubuntu-latest
-    steps:
-      - name: Send Slack/Telegram Notification
-        run: |
-          echo "Pipeline failed! Alerting the team..."
-          # Bu yerda Telegram API orqali xabar yuborish kodi bo'ladi
